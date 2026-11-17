@@ -1,0 +1,177 @@
+ABC DÍLNA 3.5.0 – NEZÁVISLÁ KONTROLA A KONKRÉTNÍ DOPRACOVÁNÍ
+Datum: 16. 11. 2026
+
+ZKONTROLOVANÝ VSTUP
+ABC_Dilna_Etapa_A_3_5_0_CENIK_DOKUMENTY_TEST.zip
+SHA-256: c659f2c1b4e3ff49be3f11fb5819383d70f37cb873ed3af9547f510c26628465
+336 souborů; 335 položek v docs/release-manifest.json, všechny odpovídají.
+ZIP prošel CRC kontrolou. Původní ZIP a rozbalené zdroje nebyly upravovány.
+Nejde o novou implementaci, opravený aplikační ZIP ani schválení nasazení.
+
+ZÁVĚR
+Rozšíření ceníku a dokumentů je v tomto balíčku skutečně implementované,
+navazuje na stejné M02 řádky a zachovává Frontu V2. Není důvod měnit koncepci
+nebo začínat znovu. Před definitivní přejímkou doporučuji odstranit dva níže
+popsané provozní zádrhele a ověřit je ve skutečné PHP/MariaDB instalaci.
+
+ROZSAH MOJÍ KONTROLY – NEMÍCHAT S TESTY AUTORA
+Vlastní opakované kontroly:
+- Nepoškozený ZIP a shoda všech 335 kontrolních součtů/velikostí manifestu.
+- Syntaxe všech 58 PHP a 9 JavaScriptových souborů bez chyby.
+- tests/session-cookie-path.php: 13 kontrol prošlo.
+- Čtení skutečných katalogových, dokumentových, tiskových, kalendářových
+  a oprávňovacích souborů, migrační cesty a přiložených testů.
+- Spuštění původních PHP funkcí c_locked_settings/c_decorate_settings,
+  c_row a a_apply_manual_plan se simulovanými odpověďmi SQL: prázdné hodiny,
+  platných 1,5 hodiny a deaktivovaná katalogová položka. Není to test databáze.
+- Původní JS/CSS pracovní karty v Chromium na šířce 360 px a extra velkém
+  textu, s testovacími API odpověďmi. Potvrzené aktivní tlačítko neaktivní
+  položky a zobrazení chyb; změna názvu již nemaže ručně zadaných 250 Kč.
+  Nejde o plný průchod skutečným serverem, autentizací, úložištěm nebo DB.
+- Znovu vykreslené a prohlédnuté DODANÉ tiskové PDF: ceník 1 strana, prázdný
+  list při zkušebním nastavení 20+20 řádků 3 strany, formát A4. Nejsou to
+  nově vytvořené doklady skutečně běžící aplikací v mém prostředí.
+
+NEZOPAKOVANÉ TESTY:
+Pokus o spuštění katalogové integrační sady v oddělené kopii skončil ještě
+před startem aplikace: chybí /usr/bin/mariadb-install-db. V prostředí není
+MariaDB/PDO MySQL/mbstring pro plnou integraci. Výsledky dodavatele 58/58 pro
+ceník+dokumenty, 52 pro Frontu V2 atd. jsou přiložené zprávy autora, nikoliv
+moje nově úspěšně spuštěné integrační testy. Jejich soubory a hashe souhlasí.
+Skutečný WEDOS, fyzický Samsung, tiskárna, produkční obnova a bezpečnostní
+penetrační audit nebyly zkoušeny. Nezjištěná chyba není důkazem bezchybnosti.
+
+CO V KÓDU ZACHOVAT
+1. Jeden abc_quick_catalog v databázi konkrétního autoservisu. Vlastní názvy,
+   jednotky, sazby, aktivita, pořadí a public_item; oddělené manage_catalog
+   od price_jobs. Mechanik bez správy neobdrží unit_cost z běžného katalogu.
+2. Vazby řádků šablon na katalog. Ceníková cena má u nové položky uložený
+   zdroj, revizi a snímek. Nepropojený díl může zůstat bez ceny.
+3. Přecenění existujícího řádku jen vědomou akcí s kontrolou práv, katalogu,
+   řádku a zakázky; vydaný doklad nelze tímto přepsat.
+4. Rozlišení NULL (Nenaceněno) od zadané nulové ceny; jednotky kolo/ks/sada
+   a práce v hodinách. Nevracet starý automatický násobek ceny celé sady
+   počtem kol. Ochrany neslučitelných kombinací a překryvů pneuservisu ponechat.
+5. Dokumenty jako soukromé verzované PDF v klientské DB, přístup v d_get,
+   kontrolované stahování a ověření velikosti/SHA. Verze jsou nové řádky,
+   nikoliv přepis původního souboru. Záloha musí obsahovat i BLOB data.
+6. Prázdný list pouze tiskne firemní hlavičku a prázdná pole; nevytváří
+   zákazníka, vozidlo, zakázku ani rezervaci. Samostatný job_sheet.php
+   tiskne konkrétní existující zakázku.
+7. Fronta V2, skutečný pobyt, otázka uvolnění pracoviště, oprava venku,
+   příprava dílů a oddělení očekávaného a skutečného dodání. Tato kontrola
+   nesupluje úplnou novou databázovou přejímku Fronty V2.
+
+F350-01 – HODINOVÁ KARTA BLOKUJE RYCHLÝ PŘÍJEM, KDYŽ HODINY JEŠTĚ NEZNÁME
+Priorita: opravit před přejímkou běžného příjmu s ceníkovými kartami.
+
+Podmínka:
+Výměna oleje je propojena s aktivní hodinovou sazbou servisu (např. 950 Kč/h).
+Mechanik chce zaznamenat plánovanou opravu, ale účtovaný počet hodin zatím neví.
+
+Reprodukce:
+1. Nová zakázka; zadej SPZ nebo zákazníka.
+2. Vyber Oleje a filtry -> konkrétní kartu Výměna motorového oleje.
+3. Pole hodin nech prázdné. Neodstraňuj vybranou práci.
+4. Uložit rychlou zakázku.
+
+Skutečnost z původní validace:
+app/review_331.php:59 v a_apply_manual_plan vrací:
+„Zadej účtované hodiny u práce Výměna motorového oleje.“ (400).
+Počet hodin je při propojení správně prázdný, ale uložení vybrané konkrétní
+práce se tím stává závislé na jeho okamžitém vyplnění.
+Stejná podmínka platí pro dodatečné přidání plánu do existující zakázky.
+Při kontrole s 1,5 h původní funkce pokračuje a připraví odpovídající řádek.
+
+Dotčená místa:
+- catalog_api.php:16 – vazba hodinové položky nastavuje quantity=null.
+- app/review_331.php:59 – vyžaduje hodiny před uložením celé dávky.
+- assets/mechanic_work.js:94–96,193–200 – formulář plánu a vytvoření zakázky.
+
+Proč je to nesoulad:
+Hlavní zadání schválilo minimální příjem a doplnění detailů až později;
+u pracovní karty výslovně uvádí „Ne nutně povinný čas“.
+Zákaz vymýšlení jedné hodiny NEZNAMENÁ, že mechanik musí hodiny znát při příjmu.
+Zachovat volbu konkrétní práce bez vynuceného návratu k pouhé obecné kategorii.
+
+Požadovaná oprava:
+- Uložit plánovanou hodinovou práci i s neznámými hodinami; sazbu servisu lze
+  znát, ale součet této práce není konečná částka, dokud není známé množství.
+- Nevyplňovat automaticky 0 ani 1 hodinu, žádný domyšlený fakturovaný čas.
+- Prázdný údaj zobrazit jako „Hodiny doplnit“ / neúplné nacenění.
+- Pozdější doplnění hodin upraví TÝŽ řádek, bez duplicity a ztráty cenového
+  zdroje/historie. Vydané doklady dál chránit.
+- Sazba×hodiny není automaticky skutečně odpracovaný čas ani obsazení heveru.
+- Vyúčtování neúplného řádku nesmí chybu obejít tichou nulou.
+
+Přejímací testy ve skutečné DB:
+A) Nový příjem -> konkrétní hodinová karta bez hodin -> zakázka se uloží.
+B) Stejnou kartu přidat do uložené zakázky bez hodin -> řádek zůstane plánovaný.
+C) Později zadat 1,5 h při 950 Kč/h -> 1425 Kč, stejné ID řádku.
+D) Přepnout či obnovit obrazovku před doplněním -> volba se neztratí.
+E) Bez doplnění údaje neprezentovat ani vystavit konečnou cenu jako 0 Kč.
+
+F350-02 – DEAKTIVOVANÝ CENÍKOVÝ DÍL JE POŘÁD BĚŽNĚ KLIKATELNÝ
+Priorita: dopracovat návaznost skrytí ceníku na karty.
+
+Reprodukce:
+1. Propoj kartu Olejový filtr s konkrétním aktivním dílem v ceníku.
+2. Tento ceníkový díl přepni na neaktivní.
+3. Otevři ČERSTVOU novou zakázku a výběr prací/dílů (nejde o starý rozepsaný
+   editor nebo běžný souběžný konflikt).
+4. Karta je stále normálně klikací, v rekapitulaci má „Nenaceněno“.
+5. Potvrzení výběru je odmítnuto: „Položka ceníku není dostupná.“ (409).
+
+Důvod doložený v kódu:
+- app/catalog_350.php:49–51 přidá catalog_available=false, ale ponechá
+  catalog_id v šabloně. To samo o sobě není špatně – vazbu chceme dohledat.
+- assets/mechanic_work.js:198–200 tento příznak při vykreslení/volbě nepoužívá.
+- app/review_331.php:63 vyžaduje aktivní katalog přes c_row;
+  app/catalog_350.php:26 odmítne neaktivní položku.
+
+Požadovaná oprava:
+- Nedostupný navázaný díl na čerstvé stránce nenabízet jako obyčejnou funkční
+  kartu „Nenaceněno“. To je jiný stav než aktivní díl s legitimně prázdnou cenou.
+- Buď jasně znepřístupnit tuto volbu před výběrem s krátkou informací, nebo
+  oprávněnému nabídnout vědomou změnu vazby / vlastní nenaceněný řádek.
+  Neobcházet serverovou ochranu a nesmí se tiše odebrat část vybrané opravy.
+- Aktivní položku bez ceny ponechat funkční.
+- U rozepsaného starého výběru po změně katalogu zachovat správný konflikt
+  i uživatelova data. Žádné tiché použití historické ceny při novém výběru.
+- Deaktivace nikdy nesmaže dřívější zakázkové řádky, historii ani doklady.
+
+Přejímací testy:
+A) Aktivní díl bez ceny je vybratelný a uložitelný jako nenaceněný plán.
+B) Inaktivovaný navázaný díl není na čerstvé stránce běžně dostupný k výběru.
+C) Zobrazené vysvětlení a nabídnutá náprava nevyžadují ztrátu zbytku příjmu.
+D) Změna během již rozepsané zakázky vyvolá konflikt a zachová koncept.
+E) Staré faktury i uložené ceny zůstanou beze změny.
+
+DOKUMENTOVANÁ OMEZENÍ, NIKOLIV NOVÉ CHYBY
+- Platnost od je nyní údaj pro tisk, nikoliv plánovaná budoucí účinnost ceny.
+  Po změně sazby začne nová sazba platit pro nové položky hned. Neprodávat
+  toto jako automatické budoucí přeceňování; uživatelský popis to má vysvětlit.
+- Plná moc je vlastní nahraný PDF soubor, ne univerzálně vygenerovaný právní
+  dokument, elektronické podepisování ani automatické vyplnění PDF polí.
+- Podporované přílohy jsou PDF do 5 MiB, logo PNG/JPEG do 512 KiB.
+- PDF kontrola MIME/hlavičky a známých aktivních klíčů není kompletní antivir.
+- Barevný ceník, velká databáze PDF, skutečný tisk a obnova hostingu vyžadují
+  další přejímku; vlastní nákupní ceny se zákazníkovi nesmějí tisknout.
+- AI, řeč, skutečné katalogy dodavatelů, skladové hospodářství a úplná
+  Kancelář nejsou předmětem této dokončovací opravy.
+
+POKYN PRO CODEX
+Pokračuj nad tímto 3.5.0 ve stejném projektu. Zachovej M02, katalogové snímky,
+Frontu V2, per-servisní data, oprávnění, historii, idempotenci a vydané doklady.
+Nejde o nový návrh produktu. Doplň F350-01 a F350-02 a přidej skutečné integrační
+regrese. Odevzdej opravené zdroje, přidávací migraci, změny a pravdivé testy.
+Na WEDOS nic nenasazuj; neprezentuj přiložené zprávy autora jako nezávislé testy.
+
+DŮKAZY V DOPROVODNÉM ZIPU
+review-facts.json, manifest.json, syntax.json, cookie-path.txt,
+probe-hours-empty.json, probe-hours-set.json, probe-inactive.json,
+browser-components.json, hours-empty-mobile.png, inactive-mobile.png,
+source-excerpts.txt, provided-test-report-integrity.json, integration-attempt.txt.
+Přiložené probe_manual.php a probe_browser.py jsou kontrolní pomocné programy,
+ne náhrada aplikačního API nebo databázových testů. Cesty lze nastavit podle
+umístění rozbaleného zdroje. Zdrojové soubory aplikace nebyly přepsané.
