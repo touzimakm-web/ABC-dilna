@@ -1,0 +1,142 @@
+ABC DÍLNA – DOPLNĚNÍ ZADÁNÍ PRO CODEX
+VLASTNÍ CENÍK PRO KLIKACÍ KARTY A FIREMNÍ DOKUMENTY
+Datum: 16. 11. 2026
+
+STAV A ROZSAH
+Toto je doplnění požadavků, nikoli zpráva o naprogramování nebo otestování.
+Uživatel požaduje:
+1) Přepisovatelný ceník propojený s klikacími kartami, protože každý autoservis
+   má vlastní ceny.
+2) Místo pro firemní dokumenty, například plné moci a ceníky, včetně možnosti
+   vytisknout prázdný zakázkový list.
+Následující pravidla rozpracovávají tyto požadavky do návrhu implementace.
+Zachovat M02, schválené pracovní postupy a všechny dřívější připomínky.
+Nenahrazuje doplnění KALENDÁŘ A FRONTA V2. Na WEDOS nic nenasazovat.
+
+0. NAVÁZAT NA STÁVAJÍCÍ ZÁKLAD
+Dokumentace dodávky 3.3.0 již popisuje vlastní ceník servisu, cenové varianty
+pneuservisu a vazbu na pracovní kartu (CTI_ME_ETAPA_A.txt, oddíl 4;
+ZMENY_ETAPA_A.txt, oddíl A3). To není potvrzení nové nezávislé kontroly kódu.
+Nejprve zjistit skutečný rozsah existující správy ceníku, jednotek, cenových
+vazeb, tisku zakázkového listu a ukládání příloh. Rozšířit existující řešení;
+nevytvářet druhý konkurenční ceník ani druhou evidenci zakázek.
+
+1. JEDEN CENÍK KAŽDÉHO AUTOSERVISU
+- Ceník je samostatný pro každý servis. Žádné pevné obchodní ceny v JS/PHP.
+- Správa v Nastavení -> Ceník, případně dostupná z Kanceláře. Mechanik používá
+  stejné ceny; oprávnění určují, zda je smí také měnit.
+- Položka má název, kategorii, druh (práce / díl či materiál), jednotku,
+  volitelnou prodejní cenu, aktivitu a příslušnou vazbu na kartu nebo variantu.
+- Podporovat existující jednotky, zejména hod, úkon, ks, l, sada a kolo.
+- Způsob nacenění: hodinová práce, pevná cena úkonu nebo nastavená varianta.
+  Název a jednotka musí odpovídat skutečnému výpočtu.
+- Majitel/oprávněný pracovník může položky vytvářet, upravovat, řadit a skrývat.
+  Deaktivace položky nesmaže její dřívější použití v zakázkách či dokladech.
+- Prázdná cena znamená Nenaceněno, nikoli nulu. Nulová cena se eviduje jen
+  jako vědomě zadaná nula. Nepředvyplňovat smyšlenou cenu nebo počet hodin.
+- Nákupní ceny nejsou součástí běžného mechanikova ceníku ani veřejného tisku.
+
+2. PROPOJENÍ CENÍKU A KLIKACÍCH KARET
+- Červené karty práce a modré karty dílů zůstávají jednoduchým výběrem.
+  Potvrzený výběr připraví stejné upravitelné řádky M02 jako ruční zadání.
+- Karta může odkazovat na příslušnou položku ceníku či šablonu prací a dílů.
+  Nepřidávat cenu současně za obecnou kategorii i za její konkrétní úkon.
+- U běžné opravy není cena povinná. Generický „Olejový filtr“ nemusí mít
+  jednu pevnou cenu pro všechna vozidla; bez určené položky zůstane bez ceny.
+- U hodinové práce mechanik zadává počet hodin; sazba se načte z platného
+  nastavení servisu. Účtované hodiny nejsou automaticky skutečně odpracované.
+- U pneuservisu zachovat výpočet podle operace, průměru, počtu kol, vyvážení
+  a nastavených příplatků. Jednoznačně rozlišit cenu za kolo, kus a celou sadu.
+- Vynucovat nastavené neslučitelné volby a zákaz dvojího účtování zahrnutého
+  úkonu. Chybějící cenovou variantu neodhadovat.
+- Ruční úprava jednotkové prodejní ceny konkrétní zakázky je samostatné právo;
+  nesmí bez dalšího měnit společný ceník celého servisu.
+
+3. ZMĚNY CEN A JIŽ ROZEPSANÉ ZAKÁZKY
+- Při převzetí ceny uložit do řádku zakázky její hodnotu a zdroj/revizi ceníku.
+- Změna ceníku se použije pro nově přidávané položky. Nesmí potichu přecenit
+  dříve uložené položky, dohodnutou nabídku, zaplacenou částku ani doklad.
+- Volitelná akce „Převzít aktuální cenu“ na nevyúčtovaném řádku vyžaduje právo
+  změnit cenu, ukáže rozdíl a provede se až po potvrzení. Zachovat historii.
+- Starší rozepsaný editor nesmí obejít kontrolu současné revize ceníku či řádku.
+- Vydané doklady dál používají neměnný snímek, nikoli živý dotaz do ceníku.
+- Úpravy ceníku logovat: kdo, kdy a co změnil. Práva kontrolovat i na serveru.
+
+4. JEDNO PŘEHLEDNÉ MÍSTO „DOKUMENTY“
+Navržené jednoduché rozdělení:
+A) Formuláře a šablony – plné moci, prázdný zakázkový list, další vlastní
+   formuláře servisu.
+B) Ceníky – tisk aktuálního veřejného ceníku z dat a vlastní nahrané ceníky.
+C) Přílohy zakázek – konkrétní vyplněné či podepsané dokumenty, dostupné také
+   přímo v odpovídající zakázce/vozidle.
+
+- Mechanik dostane jednoduché Otevřít / Vytisknout / Stáhnout podle práv.
+  Nepřidávat mu správu souborů a šablon do povinného příjmu auta.
+- Dokumenty nabídnout přehledně v hlavním menu a relevantním kontextu zakázky;
+  nepřekrývat obrazovku novou plovoucí bublinou, nepřestavovat M02.
+- Oprávněná kancelář/majitel může spravovat vlastní dokumenty, názvy, kategorie,
+  dostupnost pro zaměstnance a nové verze. Verze starších již použitých
+  dokumentů se nesmějí zpětně přepsat.
+- Pro první provedení upřednostnit tiskové šablony a bezpečně nahrané PDF.
+  Nepředstírat prohlížení/úpravu jiných formátů, není-li implementována.
+- Nahraný PDF ceník označit jako vlastní soubor: sám se nepřepočítá po změně
+  cenové databáze. Naproti tomu „Vytisknout aktuální ceník“ vychází z dat.
+- Šablona plné moci není totéž co podepsaná plná moc konkrétního zákazníka.
+  Texty jsou vlastní/potvrzené servisní šablony, bez tvrzení, že jejich právní
+  obsah automaticky vyhovuje každé situaci.
+
+5. TISK PRÁZDNÉHO ZAKÁZKOVÉHO LISTU
+- Akce „Prázdný zakázkový list“ otevře čistý tiskový náhled A4 s možností
+  vytisknout nebo uložit do PDF, bez zakládání zkušební či skutečné zakázky.
+- Předvyplnit jen nastavené firemní údaje a logo. Zákazníka, auto, SPZ/VIN,
+  km, datum/termín, požadavky, práce, materiál a místa pro podpisy ponechat
+  prázdné. Rozvržení a volitelná pole přizpůsobit vlastní šabloně servisu.
+- Nevytvářet číslo zakázky, nespouštět rezervaci ani účetní operaci pouhým
+  otevřením, tiskem nebo stažením prázdného formuláře.
+- Vedle prázdného formuláře zachovat odlišnou akci „Vytisknout tuto zakázku“.
+  Ta použije aktuální existující zakázku bez přidávání nových položek.
+- Tisk zákaznického zakázkového listu ani ceníku nesmí obsahovat nákupní ceny,
+  marže, interní chat ani důvěrné poznámky.
+- Veřejný ceník tisknout s firemními údaji, jasnými jednotkami, platností
+  a způsobem zobrazení daně podle stávajícího ověřeného nastavení aplikace;
+  nepřidávat neověřené daňové režimy. Vybírat pouze veřejné aktivní položky.
+
+6. BEZPEČNOST A SPOLEČNÁ DATA
+- Každý soubor, šablona, ceník i příloha patří konkrétnímu autoservisu.
+  Kontrola přístupu se provede také při přímém stažení a přes API.
+- Veřejný zákaznický ceník neznamená veřejnou dostupnost podepsaných dokumentů.
+- Oddělit práva zobrazit/tisknout od spravovat dokumenty a od měnit ceník.
+- Kontrolovat typ/velikost souboru, zabránit nahrání a spuštění serverového
+  kódu; soukromé soubory neposkytovat veřejně podle uhádnutelné adresy.
+- Souborové úložiště a metadata zahrnout do záloh. Dokument nevydávat za
+  bezpečně uložený, pokud selže zápis souboru nebo metadata.
+- Nastavení dokumentů a ceníku nesmí smazat ostatní nastavení servisu,
+  kapacity, oprávnění ani stávající data.
+
+7. PŘEJÍMACÍ SCÉNÁŘE
+1) Dva servisy mají stejnou kartu Výměna oleje, ale vlastní rozdílné sazby.
+   Výpočet v každém používá pouze jeho ceník a jeho jednotky.
+2) Přepsání sazby funguje po obnovení stránky. Starší uložený řádek zakázky
+   si zachová svou cenu; nová položka dostane novou cenu. Vydaná faktura
+   zůstane stejná.
+3) Mechanik bez správy ceníku nemůže změnit globální ceny ani přímým API.
+   Právo upravit cenu v konkrétní zakázce se posuzuje samostatně.
+4) Karta bez známé ceny vytvoří nenaceněný plánovaný řádek a dovolí uložit
+   rozpracovanou zakázku. Nulová cena a neznámá cena se nesměšují.
+5) Pneuservis správně násobí počet kol; příplatek za kus či zakázku se
+   nezaúčtuje dvakrát. Nepovolená kombinace je odmítnuta i serverem.
+6) Tisk aktuálního ceníku odpovídá právě platným datům a veřejným položkám.
+   Ručně nahraný starší PDF soubor se netváří jako automaticky aktuální.
+7) Prázdný zakázkový list má firemní hlavičku a prázdná pole; tisk nevytvoří
+   zákazníka, vozidlo, zakázku, číslo dokladu ani kalendářovou rezervaci.
+8) Podepsanou plnou moc lze přiřadit konkrétní zakázce. Jiný servis ani
+   pracovník bez přístupu ji nezíská odhadem ID nebo přímou adresou.
+9) Změna šablony nezmění již uloženou vyplněnou/podepsanou přílohu.
+10) Ověřit mobilní náhled s velkým písmem a stránkování tisku A4; skutečnou
+    fyzickou tiskárnu výslovně označit za neověřenou, nebyla-li otestována.
+
+VÝSTUP PRO CODEX
+Nejdřív doložit, co z požadavků již pokrývá současný projekt a co chybí.
+Potom doplnit nutné změny do stejného projektu, se zachováním M02 a oddělení
+servisů. Odevzdat kód, přidávací migrace, výsledky skutečných testů a seznam
+omezení; nesměšovat napsaný plán s již fungující implementací.
